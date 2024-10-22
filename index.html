@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ahorcado - Problemas Familiares</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+        #game-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        #hangman {
+            font-family: monospace;
+            white-space: pre;
+            margin: 20px;
+            font-size: 14px;
+        }
+        #word-display {
+            font-size: 24px;
+            margin: 20px;
+            letter-spacing: 5px;
+        }
+        #keyboard {
+            margin: 20px;
+        }
+        button {
+            margin: 2px;
+            padding: 10px 15px;
+            font-size: 16px;
+            cursor: pointer;
+            background: #4CAF50;
+            border: none;
+            color: white;
+            border-radius: 5px;
+        }
+        button:disabled {
+            background: #ccc;
+        }
+        #message {
+            font-size: 18px;
+            margin: 20px;
+            font-weight: bold;
+        }
+        #score {
+            font-size: 16px;
+            margin: 10px;
+        }
+        #new-game {
+            background: #2196F3;
+            padding: 15px 30px;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <h1>Ahorcado - Problemas Familiares</h1>
+        <div id="score">Aciertos: <span id="wins">0</span> | Fallos: <span id="losses">0</span></div>
+        <div id="hangman"></div>
+        <div id="word-display"></div>
+        <div id="message"></div>
+        <div id="keyboard"></div>
+        <button id="new-game">Nuevo Juego</button>
+    </div>
+
+    <script>
+        const words = [
+            'DIVORCIO',
+            'DISCUSION',
+            'VIOLENCIA',
+            'ALCOHOLISMO',
+            'ABANDONO',
+            'DESEMPLEO',
+            'DEPRESION',
+            'ESTRES',
+            'ADICCION',
+            'POBREZA',
+            'MALTRATO',
+            'SOLEDAD',
+            'ANSIEDAD',
+            'TRISTEZA',
+            'AUTOESTIMA'
+        ];
+
+        let word = '';
+        let guessedLetters = new Set();
+        let remainingGuesses = 6;
+        let wins = 0;
+        let losses = 0;
+
+        const hangmanStages = [
+            `
+  +---+
+  |   |
+      |
+      |
+      |
+      |
+=========`,
+            `
+  +---+
+  |   |
+  O   |
+      |
+      |
+      |
+=========`,
+            `
+  +---+
+  |   |
+  O   |
+  |   |
+      |
+      |
+=========`,
+            `
+  +---+
+  |   |
+  O   |
+ /|   |
+      |
+      |
+=========`,
+            `
+  +---+
+  |   |
+  O   |
+ /|\\  |
+      |
+      |
+=========`,
+            `
+  +---+
+  |   |
+  O   |
+ /|\\  |
+ /    |
+      |
+=========`,
+            `
+  +---+
+  |   |
+  O   |
+ /|\\  |
+ / \\  |
+      |
+=========`
+        ];
+
+        function initializeGame() {
+            word = words[Math.floor(Math.random() * words.length)];
+            guessedLetters.clear();
+            remainingGuesses = 6;
+            updateDisplay();
+            enableAllButtons();
+            document.getElementById('message').textContent = '';
+        }
+
+        function createKeyboard() {
+            const keyboard = document.getElementById('keyboard');
+            keyboard.innerHTML = '';
+            'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ'.split('').forEach(letter => {
+                const button = document.createElement('button');
+                button.textContent = letter;
+                button.onclick = () => makeGuess(letter);
+                keyboard.appendChild(button);
+            });
+        }
+
+        function updateDisplay() {
+            document.getElementById('hangman').textContent = hangmanStages[6 - remainingGuesses];
+            document.getElementById('word-display').textContent = word
+                .split('')
+                .map(letter => guessedLetters.has(letter) ? letter : '_')
+                .join(' ');
+            document.getElementById('wins').textContent = wins;
+            document.getElementById('losses').textContent = losses;
+        }
+
+        function makeGuess(letter) {
+            if (guessedLetters.has(letter)) return;
+
+            guessedLetters.add(letter);
+            const button = Array.from(document.getElementById('keyboard').children)
+                .find(btn => btn.textContent === letter);
+            button.disabled = true;
+
+            if (!word.includes(letter)) {
+                remainingGuesses--;
+                button.style.backgroundColor = '#f44336';
+            } else {
+                button.style.backgroundColor = '#4CAF50';
+            }
+
+            updateDisplay();
+            checkGameEnd();
+        }
+
+        function enableAllButtons() {
+            Array.from(document.getElementById('keyboard').children).forEach(button => {
+                button.disabled = false;
+                button.style.backgroundColor = '#4CAF50';
+            });
+        }
+
+        function checkGameEnd() {
+            const hasWon = word.split('').every(letter => guessedLetters.has(letter));
+            const hasLost = remainingGuesses === 0;
+
+            if (hasWon) {
+                wins++;
+                document.getElementById('message').textContent = '¡Felicidades! Has ganado.';
+                document.getElementById('message').style.color = '#4CAF50';
+            } else if (hasLost) {
+                losses++;
+                document.getElementById('message').textContent = `Perdiste. La palabra era: ${word}`;
+                document.getElementById('message').style.color = '#f44336';
+            }
+
+            if (hasWon || hasLost) {
+                Array.from(document.getElementById('keyboard').children).forEach(button => {
+                    button.disabled = true;
+                });
+            }
+        }
+
+        document.getElementById('new-game').onclick = initializeGame;
+
+        // Inicializar el juego
+        createKeyboard();
+        initializeGame();
+    </script>
+</body>
+</html>
